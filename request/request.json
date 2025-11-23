@@ -1,0 +1,11 @@
+curl -X POST ^
+-H "Content-Type: application/json" ^
+-d "{\"title\":\"测试文章\",\"description\":\"这是描述\"}" ^
+http://localhost:5000/knowledge-base
+
+
+curl -X POST ^
+-F "file=@langgraph.pdf" ^
+-H "Accept: application/json" ^
+http://localhost:5000/api/upload-pdf?knowledge_base_id=1 ^
+-o response.json
