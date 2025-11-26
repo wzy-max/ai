@@ -26,7 +26,7 @@ def get_dashscope_embedding(text: str) -> np.ndarray:
         
         if resp.status_code == 200:
             # 提取嵌入向量
-            embedding = np.array(resp.output['embeddings'][0]['embedding'], dtype='float32')
+            embedding = resp.output['embeddings'][0]['embedding']
             return embedding
         else:
             print(f"获取嵌入失败: {resp.message}")

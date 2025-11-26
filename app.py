@@ -8,7 +8,8 @@ from werkzeug.utils import secure_filename
 
 from service.document_service import pdf_to_images,image_to_base64, analyze_image_with_llm, summarize_content_with_llm
 import dashscope
-from service import store_service
+from service import store_service, retrieve_service
+
 
 # 创建Flask应用
 app = Flask(__name__)
@@ -43,25 +44,41 @@ def index():
 
 @app.get('/api/knowledge-base')
 def get_knowledeg_base_list():
+    # import time
+    # time.sleep(40)
     return jsonify(knowlege_base_dao.get_knowledeg_base_list())
 
 
 @app.post('/api/knowledge-base')
 def update_knowledeg_base_list():
     param = request.get_json()
-    id, title, description = param.get('id'), param.get('title'), param.get('description'), 
-    row_count = knowlege_base_dao.update_knowledge_base(id, title, description)
+    id, name, content = param.get('id'), param.get('name'), param.get('content'), 
+    store_service.update_knowledge_base(id, name, content)
+    return "True"
+
+
+@app.post('/api/retrieve')
+def retrieve_knowledeg():
+    logger.info("====invoke retrieve====")
+    param = request.get_json()
+    query = param.get('query')
+    r = retrieve_service.retrieve(query)
+    return jsonify(r)
+
+
+@app.delete('/api/knowledge-base/<int:id>')
+def delete_knowledge_base(id):
+    row_count = knowlege_base_dao.delete_knowledge_base(id)
     if row_count > 0:
         return "True"
     else:
         return "False"
 
 
-@app.route('/api/upload-pdf', methods=['POST'])
+@app.route('/api/upload-file', methods=['POST'])
 def upload_pdf():
     """处理PDF上传和解析的主接口"""
     try:
-        knowledge_base_id = int(request.args.get('knowledge_base_id'))
 
         # 检查文件是否存在
         if 'file' not in request.files:
@@ -103,7 +120,7 @@ def upload_pdf():
         # 汇总所有内容
         logger.info("正在汇总所有页面内容...")
         markdown_content = summarize_content_with_llm(page_contents)
-        store_service.store(knowledge_base_id, filename, markdown_content)
+        store_service.update_knowledge_base(None, filename, markdown_content)
 
         
         # 清理临时文件
@@ -127,4 +144,4 @@ def upload_pdf():
 
 # 运行应用
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

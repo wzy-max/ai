@@ -16,10 +16,10 @@ def update_document(id, knowledge_base_id, file_name, content):
     return pg.execute_sql(sql, params)
 
 
-def save_document_vb(document_id, content, embedding):
-    sql = """INSERT INTO document_vb (document_id, content, embedding) VALUES
+def save_document_vb(knowledge_base_id, content, embedding):
+    sql = """INSERT INTO document_vb (knowledge_base_id, content, embedding) VALUES
         (%s, %s, %s);"""
-    params = [document_id, content, embedding]
+    params = [knowledge_base_id, content, embedding]
 
     return pg.execute_sql(sql, params)
     
@@ -42,12 +42,13 @@ def search_similar_documents(query_embedding: List[float],
         
         query = """
         SELECT 
-            id,
-            content,
-            d.file_name,
+            v.id,
+            v.content,
+            d.name knowledge_base_name,
+            d.id knowledge_base_id,
             1 - (embedding <=> %s) as similarity
-        FROM document d
-        left join document_vb v on d.id = v.document_id
+        FROM knowledge_base d
+        left join document_vb v on d.id = v.knowledge_base_id
         {collection_filter}
         {similarity_filter}
         ORDER BY embedding <=> %s

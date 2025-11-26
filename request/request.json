@@ -7,5 +7,20 @@ http://localhost:5000/knowledge-base
 curl -X POST ^
 -F "file=@langgraph.pdf" ^
 -H "Accept: application/json" ^
-http://localhost:5000/api/upload-pdf?knowledge_base_id=1 ^
+http://localhost:5000/api/upload-file ^
 -o response.json
+
+
+
+curl -X POST ^
+-F "file=@22.pdf" ^
+-H "Accept: application/json" ^
+http://localhost:5000/api/upload-file ^
+-o response.json
+
+
+
+curl -X POST ^
+-H "Content-Type: application/json" ^
+-d "{\"query\":\"what is graph\"}" ^
+http://localhost:5000/api/retrieve

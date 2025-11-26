@@ -1,19 +1,21 @@
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
-from dao import document_dao
+from dao import document_dao, knowlege_base_dao
 from service import embedding_service
 import json
 
-def store(knowledge_base_id, file_name, content):
-    final_chunks = split_markdown_document(content)
 
-    document_id = document_dao.update_document(None, knowledge_base_id, file_name, content)
+
+def  update_knowledge_base(knowledge_base_id, name, content):
+    final_chunks = split_markdown_document(content)
+    r = knowlege_base_dao.update_knowledge_base(knowledge_base_id, name, content)
+    if not knowledge_base_id:
+        knowledge_base_id = r
 
     for chunk in final_chunks:
         page_content, metadata = chunk['page_content'], chunk['metadata']
         content = json.dumps(metadata) + '\n\n' + page_content
         embedding = embedding_service.get_dashscope_embedding(content)
-        document_dao.save_document_vb(document_id, content, embedding)
-
+        document_dao.save_document_vb(knowledge_base_id, content, embedding)
 
 
 def split_markdown_document(markdown_text):

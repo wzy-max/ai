@@ -94,23 +94,23 @@ if __name__ == '__main__':
         tables = pg.get_table_info()
         print("数据库中的表:", tables)
 
-        # sql = """CREATE TABLE knowledge_base (
-        #     id SERIAL PRIMARY KEY,
-        #     title VARCHAR(255) NOT NULL,
-        #     description TEXT
-        # );"""
+        sql = """CREATE TABLE knowledge_base (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            content TEXT
+        );"""
 
         # sql = """INSERT INTO knowledge_base (title, description) VALUES
         # ('Flask Web开发', '使用Flask框架构建Web应用程序'),
         # ('PostgreSQL数据库', '学习关系型数据库PostgreSQL的使用'),
         # ('机器学习基础', '人工智能和机器学习的基本概念');"""
 
-        # sql = """CREATE TABLE IF NOT EXISTS document_vb (
-        #     id SERIAL PRIMARY KEY,
-        #     document_id INT NOT NULL,
-        #     content TEXT NOT NULL,
-        #     embedding VECTOR(2048)  -- 使用vector扩展
-        # );"""
+        sql = """CREATE TABLE IF NOT EXISTS document_vb (
+            id SERIAL PRIMARY KEY,
+            knowledge_base_id INT NOT NULL,
+            content TEXT NOT NULL,
+            embedding VECTOR(2048)  -- 使用vector扩展
+        );"""
 
         # sql = """CREATE TABLE IF NOT EXISTS document (
         #     id SERIAL PRIMARY KEY,
@@ -119,8 +119,9 @@ if __name__ == '__main__':
         #     content TEXT NOT NULL
         # );"""
 
-        sql = "select * from document"
+        sql = "select * from document_vb"
         # sql = "drop table document"
+        # sql = "TRUNCATE TABLE document_vb"
 
         pg.execute_sql(sql)
         
