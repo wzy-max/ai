@@ -110,7 +110,7 @@ def analyze_image_with_llm(image_base64):
         logger.error(f"LLM图片分析失败: {str(e)}")
         raise
 
-def summarize_content_with_llm(page_contents):
+def summarize_content_with_llm(page_contents, user_advance=""):
     """使用LLM汇总所有页面内容"""
     try:
         # 构建提示词
@@ -121,19 +121,22 @@ def summarize_content_with_llm(page_contents):
         4. 使用英文输出
         5. 格式规范，符合Markdown语法"""
 
+        if user_advance:
+            system_prompt += f"\n6.{user_advance}"
+
         user_content = "\n\n".join([f"第{i+1}页内容:\n{content}" for i, content in enumerate(page_contents)])
         
         # 如果内容太长，进行截断（根据token限制调整）
-        if len(user_content) > 12000:
-            user_content = user_content[:12000] + "\n\n[内容已截断...]"
+        if len(user_content) > 60000:
+            user_content = user_content[:60000] + "\n\n[内容已截断...]"
         
         response = client.chat.completions.create(
-            model="qwen3-max",  # 使用支持长文本的模型
+            model="qwen3-max-preview",  # 使用支持长文本的模型
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_content}
             ],
-            max_tokens=4000
+            max_tokens=60000
         )
         
         summary = response.choices[0].message.content
@@ -142,5 +145,25 @@ def summarize_content_with_llm(page_contents):
     except Exception as e:
         logger.error(f"LLM内容汇总失败: {str(e)}")
         raise
+
+
+def genr_title(content):
+    prompt = f"""帮我根据下面的文本， 生成标题， 只需要返回标题（英文）, 不超过10个英文单词
+    
+    ### CONTENT 
+    {content}
+
+    """
+    response = client.chat.completions.create(
+        model="qwen3-max",  # 使用支持长文本的模型
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=60000
+    )
+    
+    summary = response.choices[0].message.content
+    return summary
+
 
 

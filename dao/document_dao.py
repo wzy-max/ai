@@ -4,17 +4,6 @@ from typing import List, Dict
 
 pg = PostgreSQLConnector()
 
-def update_document(id, knowledge_base_id, file_name, content):
-    if not id:
-        sql = """INSERT INTO document (knowledge_base_id, file_name, content) VALUES
-        (%s, %s, %s) RETURNING id;;"""
-        params = [knowledge_base_id, file_name, content]
-    else:
-        sql = "update document set file_name = %s, content = %s where id = %s"
-        params = [file_name, content, id]
-
-    return pg.execute_sql(sql, params)
-
 
 def save_document_vb(knowledge_base_id, content, embedding):
     sql = """INSERT INTO document_vb (knowledge_base_id, content, embedding) VALUES
@@ -23,6 +12,13 @@ def save_document_vb(knowledge_base_id, content, embedding):
 
     return pg.execute_sql(sql, params)
     
+
+    
+def delete_document_vb(knowledge_base_id):
+    sql = """Delete from document_vb where knowledge_base_id = %s"""
+    params = [knowledge_base_id]
+    pg.execute_sql(sql, params)
+
 
 def search_similar_documents(query_embedding: List[float], 
                                knowledge_base_id: str = None,

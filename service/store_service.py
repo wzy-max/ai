@@ -1,13 +1,14 @@
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from dao import document_dao, knowlege_base_dao
-from service import embedding_service
+from service import embedding_service,document_service
 import json
 
 
 
-def  update_knowledge_base(knowledge_base_id, name, content):
+def update_knowledge_base(knowledge_base_id, name, content, type="raw"):
     final_chunks = split_markdown_document(content)
-    r = knowlege_base_dao.update_knowledge_base(knowledge_base_id, name, content)
+    # save knowledge base if update: delete document vb
+    r = knowlege_base_dao.update_knowledge_base(knowledge_base_id, name, content,type)
     if not knowledge_base_id:
         knowledge_base_id = r
 
@@ -16,6 +17,14 @@ def  update_knowledge_base(knowledge_base_id, name, content):
         content = json.dumps(metadata) + '\n\n' + page_content
         embedding = embedding_service.get_dashscope_embedding(content)
         document_dao.save_document_vb(knowledge_base_id, content, embedding)
+
+
+def genr_processed_knowledge_base(knowledge_base_id_list, user_advance):
+    data_list = knowlege_base_dao.get_knowledge_base_by_ids(knowledge_base_id_list)
+    content_list = [d['content'] for d in data_list]
+    summary = document_service.summarize_content_with_llm(content_list, user_advance)
+    name = document_service.genr_title(summary)
+    update_knowledge_base(None, name, summary, "processed")
 
 
 def split_markdown_document(markdown_text):
