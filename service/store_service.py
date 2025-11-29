@@ -28,7 +28,6 @@ def genr_processed_knowledge_base(knowledge_base_id_list, user_advance):
 
 
 def split_markdown_document(markdown_text):
-    """完整的MD文档拆分流程"""
     
     # 1. 按标题层级拆分
     headers_to_split_on = [

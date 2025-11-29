@@ -19,68 +19,57 @@ client = OpenAI(
 )
 
 
-# def pdf_to_images(pdf_path):
-#     """将PDF转换为图片列表"""
-#     try:
-#         images = convert_from_path(pdf_path, dpi=200)
-#         logging.info(f"成功转换PDF为 {len(images)} 张图片")
-#         return images
-#     except Exception as e:
-#         logging.error(f"PDF转换图片失败: {str(e)}")
-#         raise
 
 def pdf_to_images(pdf_path):
-    """使用PyMuPDF将PDF转换为图片列表"""
+
     try:
-        # 打开PDF文件
+
         pdf_document = fitz.open(pdf_path)
         images = []
         
         for page_num in range(len(pdf_document)):
-            # 获取页面
+
             page = pdf_document.load_page(page_num)
             
-            # 设置转换矩阵（提高分辨率）
-            mat = fitz.Matrix(2.0, 2.0)  # 200% 缩放，提高清晰度
+
+            mat = fitz.Matrix(2.0, 2.0)  # 200% 
             
-            # 将页面转换为图片
+
             pix = page.get_pixmap(matrix=mat)
             
-            # 将pixmap转换为PIL Image
+
             img_data = pix.tobytes("ppm")
             img = Image.open(io.BytesIO(img_data))
             
-            # 转换为RGB（确保兼容性）
+
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
             images.append(img)
         
         pdf_document.close()
-        logging.info(f"成功转换PDF为 {len(images)} 张图片")
+        logging.info(f"success  {len(images)} pictors")
         return images
     
     except Exception as e:
-        logging.error(f"PDF转换图片失败: {str(e)}")
+        logging.error(f"PDF convert: {str(e)}")
         logging.exception(e)
         raise
 
 
 def image_to_base64(image):
-    """将PIL图像转换为base64字符串"""
     try:
         buffered = io.BytesIO()
         image.save(buffered, format="JPEG", quality=85)
         img_str = base64.b64encode(buffered.getvalue()).decode()
         return img_str
     except Exception as e:
-        logging.error(f"图片转base64失败")
+        logging.error(f"pic to base64 failed")
         logging.exception(e)
         raise
 
 
 def analyze_image_with_llm(image_base64):
-    """使用LLM分析单张图片内容"""
     try:
         response = client.chat.completions.create(
             model="qwen-vl-ocr-2025-11-20",

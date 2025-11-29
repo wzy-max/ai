@@ -25,15 +25,14 @@ def search_similar_documents(query_embedding: List[float],
                                top_k: int = 10,
                                similarity_threshold: float = 0.0) -> List[Dict]:
         """
-        相似度搜索
-        
+
         Args:
-            query_embedding: 查询向量（2048维）
-            knowledge_base_id: 集合名称过滤
-            top_k: 返回结果数量
-            similarity_threshold: 相似度阈值
+            query_embedding: 
+            knowledge_base_id: 
+            top_k: 
+            similarity_threshold:
         """
-        # 将向量转换为PostgreSQL格式
+
         embedding_str = _format_vector(query_embedding)
         
         query = """
@@ -51,7 +50,7 @@ def search_similar_documents(query_embedding: List[float],
         LIMIT %s
         """
         
-        # 构建查询条件
+
         params = [embedding_str]
         conditions = []
         
@@ -67,7 +66,7 @@ def search_similar_documents(query_embedding: List[float],
         else:
             similarity_filter = ""
         
-        # 格式化查询
+
         query = query.format(
             collection_filter=collection_filter,
             similarity_filter=similarity_filter
@@ -79,8 +78,7 @@ def search_similar_documents(query_embedding: List[float],
 
 
 def _format_vector(embedding: List[float]) -> str:
-        """将Python列表格式化为PostgreSQL向量字符串"""
         if len(embedding) != 2048:
-            raise ValueError(f"向量维度必须是2048，当前是{len(embedding)}")
+            raise ValueError(f"vector length {len(embedding)}")
         
         return '[' + ','.join(map(str, embedding)) + ']'
