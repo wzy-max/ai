@@ -10,26 +10,23 @@ import io
 import tempfile
 import base64
 import fitz 
-
+import logging
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="""sk-e995ac2840724a45949a672ae9e7f5db""",
+    api_key=os.getenv('dashscope_api_key'),
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
-
-
-logger = logging.getLogger(__name__)
 
 
 # def pdf_to_images(pdf_path):
 #     """将PDF转换为图片列表"""
 #     try:
 #         images = convert_from_path(pdf_path, dpi=200)
-#         logger.info(f"成功转换PDF为 {len(images)} 张图片")
+#         logging.info(f"成功转换PDF为 {len(images)} 张图片")
 #         return images
 #     except Exception as e:
-#         logger.error(f"PDF转换图片失败: {str(e)}")
+#         logging.error(f"PDF转换图片失败: {str(e)}")
 #         raise
 
 def pdf_to_images(pdf_path):
@@ -60,12 +57,14 @@ def pdf_to_images(pdf_path):
             images.append(img)
         
         pdf_document.close()
-        logger.info(f"成功转换PDF为 {len(images)} 张图片")
+        logging.info(f"成功转换PDF为 {len(images)} 张图片")
         return images
     
     except Exception as e:
-        logger.error(f"PDF转换图片失败: {str(e)}")
+        logging.error(f"PDF转换图片失败: {str(e)}")
+        logging.exception(e)
         raise
+
 
 def image_to_base64(image):
     """将PIL图像转换为base64字符串"""
@@ -75,8 +74,10 @@ def image_to_base64(image):
         img_str = base64.b64encode(buffered.getvalue()).decode()
         return img_str
     except Exception as e:
-        logger.error(f"图片转base64失败: {str(e)}")
+        logging.error(f"图片转base64失败")
+        logging.exception(e)
         raise
+
 
 def analyze_image_with_llm(image_base64):
     """使用LLM分析单张图片内容"""
@@ -100,15 +101,17 @@ def analyze_image_with_llm(image_base64):
                     ]
                 }
             ],
-            max_tokens=2000
+            max_tokens=5000
         )
         
         content = response.choices[0].message.content
-        logger.info(f"图片分析完成，字符数: {len(content)}")
+        logging.info(f"图片分析完成，字符数: {len(content)}")
         return content
     except Exception as e:
-        logger.error(f"LLM图片分析失败: {str(e)}")
+        logging.error(f"LLM图片分析失败: {str(e)}")
+        logging.exception(e)
         raise
+
 
 def summarize_content_with_llm(page_contents, user_advance=""):
     """使用LLM汇总所有页面内容"""
@@ -140,10 +143,11 @@ def summarize_content_with_llm(page_contents, user_advance=""):
         )
         
         summary = response.choices[0].message.content
-        logger.info(f"内容汇总完成，字符数: {len(summary)}")
+        logging.info(f"内容汇总完成，字符数: {len(summary)}")
         return summary
     except Exception as e:
-        logger.error(f"LLM内容汇总失败: {str(e)}")
+        logging.error(f"LLM内容汇总失败: {str(e)}")
+        logging.exception(e)
         raise
 
 

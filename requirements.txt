@@ -86,7 +86,7 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
-weasyprint==66.0
+weasylogging.info==66.0
 webencodings==0.5.1
 websocket-client==1.9.0
 Werkzeug==3.1.3

@@ -5,7 +5,7 @@ import pandas as pd
 import psycopg2
 from psycopg2 import pool
 import pandas as pd
-import threading
+import logging
 
 from argparse import Namespace
 
@@ -26,10 +26,11 @@ class PostgreSQLConnector:
                 self.max_conn,
                 self.connection_string
             )
-            print(f"✅ PostgreSQL连接池创建成功! 连接数: {self.min_conn}-{self.max_conn}")
+            logging.info(f"✅ PostgreSQL连接池创建成功! 连接数: {self.min_conn}-{self.max_conn}")
             return True
         except psycopg2.Error as e:
-            print(f"❌ 连接池创建失败: {e}")
+            logging.error(f"❌ 连接池创建失败: {e}")
+            logging.exception(e)
             return False
     
     def get_connection(self):
@@ -40,7 +41,8 @@ class PostgreSQLConnector:
                 self._local.cursor = self._local.conn.cursor()
             return self._local.conn, self._local.cursor
         except psycopg2.Error as e:
-            print(f"❌ 获取连接失败: {e}")
+            logging.error(f"❌ 获取连接失败: {e}")
+            logging.exception(e)
             return None, None
     
     def release_connection(self):
@@ -54,7 +56,8 @@ class PostgreSQLConnector:
                 self.connection_pool.putconn(self._local.conn)
                 self._local.conn = None
         except Exception as e:
-            print(f"❌ 释放连接失败: {e}")
+            logging.error(f"❌ 释放连接失败: {e}")
+            logging.exception(e)
     
     def execute_sql(self, query, params=None):
         """执行查询语句"""
@@ -79,7 +82,7 @@ class PostgreSQLConnector:
                 
         except psycopg2.Error as e:
             conn.rollback()
-            print(f"❌ 执行查询失败: {e}")
+            logging.info(f"❌ 执行查询失败: {e}")
             return None
         finally:
             # 注意：这里不释放连接，保持连接在请求生命周期内
@@ -108,7 +111,7 @@ class PostgreSQLConnector:
                 
         except psycopg2.Error as e:
             conn.rollback()
-            print(f"❌ 执行查询失败: {e}")
+            logging.error(f"❌ 执行查询失败: {e}")
             return None
         finally:
             self.release_connection()
@@ -152,7 +155,7 @@ class PostgreSQLConnector:
                 return df.to_dict(orient)
                 
         except Exception as e:
-            print(f"❌ 查询转字典失败: {e}")
+            logging.info(f"❌ 查询转字典失败: {e}")
             return []
         finally:
             # self.release_connection()
@@ -162,7 +165,7 @@ class PostgreSQLConnector:
         """关闭所有连接"""
         if self.connection_pool:
             self.connection_pool.closeall()
-            print("✅ 数据库连接池已关闭")
+            logging.info("✅ 数据库连接池已关闭")
     
     def get_pool_status(self):
         """获取连接池状态"""
@@ -199,10 +202,10 @@ if __name__ == '__main__':
         connection_string="postgresql://neondb_owner:npg_OfmVx6R5pDjA@ep-shy-salad-a459v8qo-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     )
     
-    if pg.connect():
+    if pg.get_connection():
         # 获取所有表
         tables = pg.get_table_info()
-        print("数据库中的表:", tables)
+        logging.info("数据库中的表:", tables)
 
         sql = """CREATE TABLE knowledge_base (
             id SERIAL PRIMARY KEY,

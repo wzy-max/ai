@@ -1,27 +1,28 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask,  request, jsonify
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 import logging
 from dao import knowlege_base_dao
 from docx import Document
-import html
-import os
-from docx import Document
 from fpdf import FPDF
-import os
+from dotenv import load_dotenv
 
 from werkzeug.utils import secure_filename
 
-from service.document_service import pdf_to_images,image_to_base64, analyze_image_with_llm, summarize_content_with_llm
 import dashscope
 from service import store_service, retrieve_service
+from service.document_service import pdf_to_images,image_to_base64, analyze_image_with_llm, summarize_content_with_llm
 
 
 # 创建Flask应用
 app = Flask(__name__)
 
 thread_pool = ThreadPoolExecutor(max_workers=10)
+
+# set env
+load_dotenv()
+dashscope.api_key  = os.getenv('dashscope_api_key')
 
 # 配置
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB限制
@@ -33,17 +34,18 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'docx', 'doc', 'txt'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['TEMP_IMAGES'], exist_ok=True)
 
+
 # 配置日志
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler('app.log', encoding='utf-8'),
+        logging.StreamHandler()  # 同时输出到控制台
+    ]
+)
 
-dashscope.api_key  = 'sk-e995ac2840724a45949a672ae9e7f5db'
-
-
-def allowed_file(filename):
-    """检查文件扩展名是否允许"""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # 首页路由
 @app.route('/api/vession')
@@ -88,7 +90,7 @@ def summary_knowledge_base():
     
 @app.post('/api/retrieve')
 def retrieve_knowledeg():
-    logger.info("====invoke retrieve====")
+    logging.info("====invoke retrieve====")
     param = request.get_json()
     query = param.get('query')
     r = retrieve_service.retrieve(query)
@@ -116,7 +118,7 @@ def upload_pdf():
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
-        logger.info(f"文件已保存: {file_path}")
+        logging.info(f"文件已保存: {file_path}")
 
         filename_path_list.append([filename, file_path])
 
@@ -143,7 +145,7 @@ def upload_pdf_method(filename_path_list:list):
                 # 分析每一页
                 page_contents = []
                 for i, image in enumerate(images):
-                    logger.info(f"正在分析第 {i+1}/{len(images)} 页...")
+                    logging.info(f"正在分析第 {i+1}/{len(images)} 页...")
                     
                     # 转换图片为base64
                     image_base64 = image_to_base64(image)
@@ -152,10 +154,10 @@ def upload_pdf_method(filename_path_list:list):
                     page_content = analyze_image_with_llm(image_base64)
                     page_contents.append(page_content)
                     
-                    logger.info(f"第 {i+1} 页分析完成")
+                    logging.info(f"第 {i+1} 页分析完成")
                 
                 # 汇总所有内容
-                logger.info("正在汇总所有页面内容...")
+                logging.info("正在汇总所有页面内容...")
 
             total_page_contents.extend(page_contents)
 
@@ -166,12 +168,12 @@ def upload_pdf_method(filename_path_list:list):
         # 清理临时文件
         try:
             # os.remove(file_path)
-            logger.info("临时文件已清理")
+            logging.info("临时文件已清理")
         except:
             pass
         
     except Exception as e:
-        logger.error(f"处理过程出错: {str(e)}")
+        logging.exception(e)
 
 
 class PDFConverter(FPDF):
@@ -213,17 +215,21 @@ def docx_to_pdf_fpdf(docx_path, pdf_path=None):
         
         # 保存PDF
         pdf.output(pdf_path)
-        print(f"转换成功: {pdf_path}")
+        logging.info(f"转换成功: {pdf_path}")
         return pdf_path
         
     except Exception as e:
-        print(f"转换失败: {e}")
+        logging.info(f"转换失败: {e}")
         raise e
     finally:
         os.remove(docx_path)
-        logger.info("临时文件已清理")
+        logging.info("临时文件已清理")
 
 
+def allowed_file(filename):
+    """检查文件扩展名是否允许"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # 运行应用
 if __name__ == '__main__':

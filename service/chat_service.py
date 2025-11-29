@@ -1,3 +1,5 @@
+import logging
+
 from retrieve_service import retrieve
 from langgraph.graph import MessagesState
 
@@ -88,7 +90,7 @@ def chat(question, knowledge_base_id, session_id):
         stream_mode='values',
         config=config
     ):
-        print("---")
+        logging.info("---")
 
     return step['messages'][-1].content
 

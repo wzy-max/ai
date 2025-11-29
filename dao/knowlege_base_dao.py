@@ -1,6 +1,6 @@
 from utils.db_util import PostgreSQLConnector
 from dao import document_dao 
-
+import logging
 
 pg = PostgreSQLConnector()
 
@@ -8,6 +8,7 @@ pg = PostgreSQLConnector()
 def get_knowledeg_base_list(type='raw'):
     sql = """select id::TEXT as id, name, content from knowledge_base where "type" = %s order by id desc"""
     params =[type]
+    logging.info(params)
     return pg.query_to_dict(sql, params)
 
 

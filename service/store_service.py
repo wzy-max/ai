@@ -2,7 +2,7 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharac
 from dao import document_dao, knowlege_base_dao
 from service import embedding_service,document_service
 import json
-
+import logging
 
 
 def update_knowledge_base(knowledge_base_id, name, content, type="raw"):

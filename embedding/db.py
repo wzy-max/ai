@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 import json
 import os
 
+
 class DashScopeFAISSVectorDB:
     def __init__(self, dimension=1536, index_path=None):
         """
@@ -50,11 +51,11 @@ class DashScopeFAISSVectorDB:
                 embedding = np.array(resp.output['embeddings'][0]['embedding'], dtype='float32')
                 return embedding
             else:
-                print(f"获取嵌入失败: {resp.message}")
+                logging.info(f"获取嵌入失败: {resp.message}")
                 return None
                 
         except Exception as e:
-            print(f"DashScope API调用异常: {e}")
+            logging.info(f"DashScope API调用异常: {e}")
             return None
     
     def get_embeddings_batch(self, texts: List[str]) -> np.ndarray:
@@ -80,11 +81,11 @@ class DashScopeFAISSVectorDB:
                 
                 return np.vstack(embeddings)
             else:
-                print(f"批量获取嵌入失败: {resp.message}")
+                logging.info(f"批量获取嵌入失败: {resp.message}")
                 return None
                 
         except Exception as e:
-            print(f"DashScope API批量调用异常: {e}")
+            logging.info(f"DashScope API批量调用异常: {e}")
             return None
     
     def add_documents(self, documents: List[str], metadatas: List[Dict] = None):
@@ -101,7 +102,7 @@ class DashScopeFAISSVectorDB:
         if len(documents) != len(metadatas):
             raise ValueError("文档和元数据数量不匹配")
         
-        print("正在生成文本嵌入...")
+        logging.info("正在生成文本嵌入...")
         embeddings = self.get_embeddings_batch(documents)
         
         if embeddings is not None:
@@ -112,9 +113,9 @@ class DashScopeFAISSVectorDB:
             self.documents.extend(documents)
             self.metadatas.extend(metadatas)
             
-            print(f"成功添加 {len(documents)} 个文档")
+            logging.info(f"成功添加 {len(documents)} 个文档")
         else:
-            print("添加文档失败")
+            logging.info("添加文档失败")
     
     def search(self, query: str, k: int = 5, score_threshold: float = 0.7) -> List[Dict]:
         """
@@ -167,7 +168,7 @@ class DashScopeFAISSVectorDB:
             with open(save_path + '.json', 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             
-            print(f"索引已保存到: {save_path}")
+            logging.info(f"索引已保存到: {save_path}")
     
     def load_index(self, path: str):
         """加载FAISS索引"""
@@ -180,9 +181,9 @@ class DashScopeFAISSVectorDB:
                 self.documents = data['documents']
                 self.metadatas = data['metadatas']
             
-            print(f"索引已从 {path} 加载")
+            logging.info(f"索引已从 {path} 加载")
         except Exception as e:
-            print(f"加载索引失败: {e}")
+            logging.info(f"加载索引失败: {e}")
     
     def get_stats(self) -> Dict:
         """获取数据库统计信息"""
