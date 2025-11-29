@@ -82,7 +82,8 @@ class PostgreSQLConnector:
                 
         except psycopg2.Error as e:
             conn.rollback()
-            logging.info(f"❌ 执行查询失败: {e}")
+            logging.error(f"❌ 执行查询失败: {e}")
+            logging.exception(e)
             return None
         finally:
             # 注意：这里不释放连接，保持连接在请求生命周期内
@@ -112,6 +113,7 @@ class PostgreSQLConnector:
         except psycopg2.Error as e:
             conn.rollback()
             logging.error(f"❌ 执行查询失败: {e}")
+            logging.exception(e)
             return None
         finally:
             self.release_connection()
@@ -155,7 +157,8 @@ class PostgreSQLConnector:
                 return df.to_dict(orient)
                 
         except Exception as e:
-            logging.info(f"❌ 查询转字典失败: {e}")
+            logging.error(f"❌ 查询转字典失败: {e}")
+            logging.exception(e)
             return []
         finally:
             # self.release_connection()

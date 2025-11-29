@@ -26,7 +26,7 @@ def update_knowledge_base(id, name, content, type='raw'):
     else:
         document_dao.delete_document_vb(id)
         sql = """update knowledge_base set name = %s, content = %s, "type" = %s where id = %s"""
-        params = [name, content, id, type]
+        params = [name, content, type, id]
 
     return pg.execute_sql(sql, params)
 

@@ -29,5 +29,5 @@ http://localhost:5000/api/retrieve
 curl -X POST ^
 -F "file=@22.pdf" ^
 -H "Accept: application/json" ^
-http://localhost:5001/api/upload-file ^
+http://localhost:5000/api/upload-file ^
 -o response.json

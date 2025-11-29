@@ -7,6 +7,7 @@ from dao import knowlege_base_dao
 from docx import Document
 from fpdf import FPDF
 from dotenv import load_dotenv
+import json
 
 from werkzeug.utils import secure_filename
 
@@ -34,6 +35,7 @@ app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'docx', 'doc', 'txt'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['TEMP_IMAGES'], exist_ok=True)
 
+tmp_list =[]
 
 # 配置日志
 logging.basicConfig(
@@ -43,9 +45,9 @@ logging.basicConfig(
     handlers=[
         logging.FileHandler('app.log', encoding='utf-8'),
         logging.StreamHandler()  # 同时输出到控制台
-    ]
+    ],
+    force=True
 )
-
 
 # 首页路由
 @app.route('/api/vession')
@@ -57,6 +59,7 @@ def index():
 # 获取knowledge base
 @app.get('/api/knowledge-base')
 def get_knowledeg_base_list():
+    logging.info("Invoek get_knowledeg_base_list")
     return jsonify(knowlege_base_dao.get_knowledeg_base_list(request.args.get("type", "raw")))
 
 
@@ -64,8 +67,10 @@ def get_knowledeg_base_list():
 @app.post('/api/knowledge-base')
 def update_knowledeg_base_list():
     param = request.get_json()
-    id, name, content = int(param.get('id')), param.get('name'), param.get('content'), 
-    store_service.update_knowledge_base(id, name, content)
+    id, name, content = param.get('id'), param.get('name'), param.get('content')
+    if id:
+        id=str(id)
+    thread_pool.submit(store_service.update_knowledge_base, id, name, content)
     return "True"
 
 
@@ -94,6 +99,9 @@ def retrieve_knowledeg():
     param = request.get_json()
     query = param.get('query')
     r = retrieve_service.retrieve(query)
+
+    content_list = [d['content'] for d in r]
+    tmp_list.append(content_list)
     return jsonify(r)
 
 
@@ -233,4 +241,4 @@ def allowed_file(filename):
 
 # 运行应用
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

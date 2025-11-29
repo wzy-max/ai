@@ -122,7 +122,9 @@ def summarize_content_with_llm(page_contents, user_advance=""):
         2. 组织结构合理，使用适当的标题层级
         3. 如果有图表描述，请合理组织
         4. 使用英文输出
-        5. 格式规范，符合Markdown语法"""
+        5. 格式规范，符合Markdown语法
+        6. 只需要返回纯的Markdown内容, 其他无需返回, 不要使用 ```markdown 包裹
+        """
 
         if user_advance:
             system_prompt += f"\n6.{user_advance}"
